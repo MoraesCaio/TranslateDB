@@ -1,8 +1,39 @@
+"""This code translate large files using Open-Signs (VLibras/UFPB).
+
+    Usage:
+        'python3 translateDB.py DB_1.txt DB_2.txt DB_3.txt'
+
+    Each file will be divided into smaller files with 1000 lines at most and
+     then each part will be translated by a diferent thread.
+
+    Example:
+    /
+        parts/
+            glosa/ (translations)
+                a.txt_0_glosa.txt
+                a.txt_1_glosa.txt
+                a.txt_2_glosa.txt
+                a.txt_3_glosa.txt
+            source/ (parts already translated)
+                a.txt_0.txt
+                a.txt_1.txt
+                a.txt_2.txt
+                a.txt_3.txt
+            a.txt_4.txt (parts to be translated)
+        a.txt (DB)
+
+    TODO: concatenate translations into a new file
+
+    Dev: Caio Moraes
+    GitHub: MoraesCaio
+    Email: caiomoraes.cesar@gmail.com
+"""
+
 import concurrent.futures
+import multiprocessing
 import os
 import subprocess
 import sys
-import multiprocessing
 
 
 core_count = multiprocessing.cpu_count()
@@ -74,9 +105,40 @@ def translate_on_path(path):
     print('>>> DB "' + path + '" TRANSLATED')
 
 
+def divide_DB(filepath):
+
+    lines_per_file = 1000
+
+    path, filename = os.path.split(os.path.abspath(filepath))
+    prefix = filename[:5]
+
+    parts_dir = os.path.join(path, prefix + '_parts')
+
+    if not os.path.exists(parts_dir):
+        os.makedirs(parts_dir)
+
+    with open(sys.argv[1], 'r') as input_file:
+
+        cur_part = 0
+
+        for i, line in enumerate(input_file):
+
+            part_path = os.path.join(parts_dir, prefix + '_' +
+                                     str(cur_part) + '.txt')
+
+            with open(part_path, 'a') as output_file:
+
+                output_file.write(line)
+
+                if i % lines_per_file == lines_per_file - 1:
+                    cur_part += 1
+
+    return parts_dir
+
+
 def main():
     for i in range(1, len(sys.argv)):
-        translate_on_path(sys.argv[i])
+        translate_on_path(divide_DB(sys.argv[i]))
 
 
 if __name__ == '__main__':
