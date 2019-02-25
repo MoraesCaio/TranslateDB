@@ -54,7 +54,7 @@ def translate(dirpath, filename):
 
     # TRANSLATION
     print('>>> TRANSLATING "' + source_path_from + '"...')
-    result = subprocess.run(['python', 'TraduzirArquivo.py', source_path_from])
+    result = subprocess.run(['python2', 'TraduzirArquivo.py', source_path_from])
     print('>>> ' + source_path_from + ' TRANSLATED.')
 
     # FILES
