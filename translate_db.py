@@ -29,14 +29,12 @@
     Email: caiomoraes.cesar@gmail.com
 """
 
+import argparse
 import concurrent.futures
 import multiprocessing
 import os
 import subprocess
 import sys
-
-
-core_count = multiprocessing.cpu_count()
 
 
 def translate(dirpath, filename):
@@ -136,10 +134,34 @@ def divide_DB(filepath):
     return parts_dir
 
 
-def main():
-    for i in range(1, len(sys.argv)):
-        translate_on_path(divide_DB(sys.argv[i]))
-
-
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-d', '--divide-only', nargs='+',
+                        help='DB paths to solely divide.')
+    parser.add_argument('-t', '--translate-only', nargs='+',
+                        help='DB paths to solely translate.')
+    parser.add_argument('full', nargs='*',
+                        help='DB paths to divide and translate.')
+
+    parser.add_argument('-c', '--leave-core-free', action='store_true',
+                        help='Whether it should leave ' +
+                             'one core free from workload.')
+
+    args, _ = parser.parse_known_args()
+
+    core_count = multiprocessing.cpu_count() - int(args.leave_core_free)
+
+    if args.divide_only:
+        for d in args.divide_only:
+            print('Dividing', d)
+            divide_DB(d)
+
+    if args.translate_only:
+        for t in args.translate_only:
+            print('Translating', t)
+            translate_on_path(t)
+
+    for f in args.full:
+        print('Dividing and translating', f)
+        translate_on_path(divide_DB(f))
